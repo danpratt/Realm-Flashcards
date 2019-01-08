@@ -33,12 +33,27 @@ import RealmSwift
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
 
-  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     setupRealm()
     return true
   }
 
   private func setupRealm() {
+    let cardsRealm = RealmProvider.cards.realm
+    let bundledSetsRealm = RealmProvider.bundled.realm
+    
+    var setsToCopy = [FlashCardSet]()
+    for bundledSet in bundledSetsRealm.objects(FlashCardSet.self) where cardsRealm.object(ofType: FlashCardSet.self, forPrimaryKey: bundledSet.name) == nil {
+      setsToCopy.append(bundledSet)
+    }
+    
+    guard setsToCopy.count > 0 else { return }
+    
+    try! cardsRealm.write {
+      for cardSet in setsToCopy {
+        cardsRealm.create(FlashCardSet.self, value: cardSet, update: false)
+      }
+    }
     
   }
 }

@@ -30,5 +30,27 @@ import Foundation
 import RealmSwift
 
 struct RealmProvider {
-
+  let configuration: Realm.Configuration
+  
+  /* An easy approach to error handling in this case would be to replace try! with try? and change the property type to Realm?, returning a nil value in the rare case the there’s not enough space on disk or the file has been corrupted by another process. Another approach would be to have a throwing realm() method instead of a property. */
+  var realm: Realm {
+    return try! Realm(configuration: configuration)
+  }
+  
+  internal init(config: Realm.Configuration) {
+    configuration = config
+  }
+  
+  private static let cardsConfig = Realm.Configuration(fileURL: try! Path.inLibrary("cards.realm"), schemaVersion: 1, deleteRealmIfMigrationNeeded: true, objectTypes: [FlashCardSet.self, FlashCard.self])
+  
+  public static var cards: RealmProvider = {
+    return RealmProvider(config: cardsConfig)
+  }()
+  
+  private static let bundledConfig = Realm.Configuration(fileURL: try! Path.inBundle("bundledSets.realm"), readOnly: true, objectTypes: [FlashCardSet.self, FlashCard.self])
+  
+  public static var bundled: RealmProvider = {
+    return RealmProvider(config: bundledConfig)
+  }()
+  
 }
